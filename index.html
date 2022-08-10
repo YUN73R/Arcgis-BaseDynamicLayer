@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <title>地图叠加图片</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.19/esri/themes/dark-blue/main.css" />
+    <script src="https://js.arcgis.com/4.19/"></script>
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        button {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+    <button onclick="addImageToMap()">显示/隐藏图片</button>
+    <script>
+        let baseMap, mapView, customDynamicLayer, GeoExtent, GeoPoint, DynamicLayer, WebMercatorUtils;
+        const extent = { xmin: 107.03535, ymin: 34.28130, xmax: 107.76456, ymax: 34.63005 };
+        require([
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/geometry/Extent",
+            "esri/geometry/Point",
+            "esri/geometry/support/webMercatorUtils",
+            "esri/layers/BaseDynamicLayer"
+        ], function (Map, MapView, Extent, Point, webMercatorUtils, BaseDynamicLayer) {
+            GeoExtent = Extent;
+            GeoPoint = Point;
+            DynamicLayer = BaseDynamicLayer;
+            WebMercatorUtils = webMercatorUtils;
+            var map = new Map({
+                basemap: 'osm',
+            });
+            baseMap = map
+
+            var view = new MapView({
+                container: "viewDiv",
+                map: map,
+                center: [107.246152, 34.414465],
+                zoom: 7
+            });
+            mapView = view
+            view.on('click', e => {
+                console.log(e);
+            })
+            view.when(() => crateDynamicLayer())
+        });
+
+        function addImageToMap() {
+            //初次叠加创建图层，后续控制该图层的显示隐藏
+            const curLayer = baseMap.findLayerById(`baes_dynamic_layer`);
+            setTimeout(() => {
+                    //为解决第一次不加载图片的问题
+                    mapView.goTo({
+                    center: [extent.xmin + (extent.xmax - extent.xmin) / 2, extent.ymin + (extent.ymax - extent.ymin) / 2],
+                    zoom: 10
+                })
+            }, 200)
+            
+            if (curLayer) {
+                curLayer.visible = !curLayer.visible;
+                return
+            }
+            let ImageOverlayLayer = new customDynamicLayer({
+                id: 'baes_dynamic_layer',
+                picUrl: `./image/yasuo.jpg`,
+                extent: extent,
+                view: mapView
+            });
+            ImageOverlayLayer.refreshInterval = 0;//不自动刷新
+            baseMap.add(ImageOverlayLayer);
+        }
+
+        function crateDynamicLayer() {
+            customDynamicLayer = DynamicLayer.createSubclass({
+                properties: {
+                    picUrl: null,
+                    extent: null,
+                    image: null,
+                    canvas: null,
+                    view: mapView
+                },
+                getImageUrl: function (extent, width, height) {
+                    //转换图片范围的坐标系，如果坐标系相同，则无需转换
+                    let wgsExtent = WebMercatorUtils.geographicToWebMercator(new GeoExtent({
+                        xmin: this.extent.xmin,
+                        ymin: this.extent.ymin,
+                        xmax: this.extent.xmax,
+                        ymax: this.extent.ymax
+                    }));
+                    let upperLeftMerc = new GeoPoint({
+                        x: wgsExtent.xmin,
+                        y: wgsExtent.ymax,
+                        spatialReference: this.view.spatialReference
+                    });
+                    let lowerRightMerc = new GeoPoint({
+                        x: wgsExtent.xmax,
+                        y: wgsExtent.ymin,
+                        spatialReference: this.view.spatialReference
+                    });
+                    let newULX = (upperLeftMerc.x - extent.xmin) / (extent.xmax - extent.xmin) * width;
+                    let newULY = height - (upperLeftMerc.y - extent.ymin) / (extent.ymax - extent.ymin) * height;
+
+                    let newLRX = (lowerRightMerc.x - extent.xmin) / (extent.xmax - extent.xmin) * width;
+                    let newLRY = height - (lowerRightMerc.y - extent.ymin) / (extent.ymax - extent.ymin) * height;
+
+                    let imageWidth = Math.abs(newLRX - newULX);
+                    let imageHeight = Math.abs(newULY - newLRY);
+
+                    if (!this.image) {
+                        this.image = new Image();
+                        this.image.setAttribute("crossOrigin", 'Anonymous');
+                        this.image.src = this.picUrl;
+                    }
+                    if (!this.canvas) {
+                        this.canvas = document.createElement('canvas');
+                    }
+                    this.canvas.width = width;
+                    this.canvas.height = height;
+                    this.canvas.getContext('2d').drawImage(this.image, newULX, newULY, imageWidth, imageHeight);
+                    return this.canvas.toDataURL('image/png');
+                }
+            })
+        }
+    </script>
+</body>
+
+</html>

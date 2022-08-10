@@ -1,0 +1,14 @@
+{
+  "name": "arcgis-basedynamiclayer",
+  "version": "1.0.0",
+  "description": "arcgis BaseDynamicLayer示例",
+  "main": "index.js",
+  "scripts": {
+    "serve": "serve -p 3456"
+  },
+  "author": "YNN73R",
+  "license": "ISC",
+  "dependencies": {
+    "serve": "^14.0.1"
+  }
+}
