@@ -1,7 +1,9 @@
 ## ARCGIS FOR JAVASCRIPT 地图叠加图片
 > 实现地图旋转图片不变形，不位移
 
-[预览地址](https://yun73r.github.io/Arcgis-BaseDynamicLayer/) : https://yun73r.github.io/Arcgis-BaseDynamicLayer/，第一次加载请耐心等待图片加载完成
+[预览地址](https://yun73r.github.io/Arcgis-BaseDynamicLayer/) : https://yun73r.github.io/Arcgis-BaseDynamicLayer/
+
+第一次加载请耐心等待图片加载完成
 
 ### 运行
 ```
