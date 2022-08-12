@@ -61,13 +61,10 @@
         function addImageToMap() {
             //初次叠加创建图层，后续控制该图层的显示隐藏
             const curLayer = baseMap.findLayerById(`baes_dynamic_layer`);
-            setTimeout(() => {
-                    //为解决第一次不加载图片的问题
-                    mapView.goTo({
-                    center: [extent.xmin + (extent.xmax - extent.xmin) / 2, extent.ymin + (extent.ymax - extent.ymin) / 2],
-                    zoom: 10
-                })
-            }, 200)
+            mapView.goTo({
+                center: [extent.xmin + (extent.xmax - extent.xmin) / 2, extent.ymin + (extent.ymax - extent.ymin) / 2],
+                zoom: 10
+            })
             
             if (curLayer) {
                 curLayer.visible = !curLayer.visible;
