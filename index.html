@@ -55,9 +55,6 @@
                 zoom: 7
             });
             mapView = view
-            view.on('click', e => {
-                console.log(e);
-            })
             view.when(() => crateDynamicLayer())
         });
 
@@ -95,7 +92,7 @@
                     canvas: null,
                     view: mapView
                 },
-                getImageUrl: function (extent, width, height) {
+                getImageUrl: async function (extent, width, height) {
                     //转换图片范围的坐标系，如果坐标系相同，则无需转换
                     let wgsExtent = WebMercatorUtils.geographicToWebMercator(new GeoExtent({
                         xmin: this.extent.xmin,
@@ -125,15 +122,23 @@
                     if (!this.image) {
                         this.image = new Image();
                         this.image.setAttribute("crossOrigin", 'Anonymous');
-                        this.image.src = this.picUrl;
                     }
                     if (!this.canvas) {
                         this.canvas = document.createElement('canvas');
                     }
                     this.canvas.width = width;
                     this.canvas.height = height;
-                    this.canvas.getContext('2d').drawImage(this.image, newULX, newULY, imageWidth, imageHeight);
-                    return this.canvas.toDataURL('image/png');
+                    //第一次图片未加载完成就导出canvas，所以第一次不显示，这里改为异步导出canvas
+                    const loadimg = img => {
+                        return new Promise((rel, rej) => {
+                            img.onload = () => {
+                                this.canvas.getContext('2d').drawImage(img, newULX, newULY, imageWidth, imageHeight);
+                                rel(this.canvas.toDataURL('image/png'))
+                            }
+                            img.src = this.picUrl;
+                        })
+                    }
+                    return await loadimg(this.image)
                 }
             })
         }
