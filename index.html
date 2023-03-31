@@ -30,7 +30,12 @@
     <button onclick="addImageToMap()">显示/隐藏图片</button>
     <script>
         let baseMap, mapView, customDynamicLayer, GeoExtent, GeoPoint, DynamicLayer, WebMercatorUtils;
-        const extent = { xmin: 107.03535, ymin: 34.28130, xmax: 107.76456, ymax: 34.63005 };
+        const extent = {
+            "xmin": 73.42961975,
+            "ymin": 20.2,
+            "xmax": 135.10961975,
+            "ymax": 53.56
+        }
         require([
             "esri/Map",
             "esri/views/MapView",
@@ -61,18 +66,18 @@
         function addImageToMap() {
             //初次叠加创建图层，后续控制该图层的显示隐藏
             const curLayer = baseMap.findLayerById(`baes_dynamic_layer`);
-            mapView.goTo({
-                center: [extent.xmin + (extent.xmax - extent.xmin) / 2, extent.ymin + (extent.ymax - extent.ymin) / 2],
-                zoom: 10
-            })
-            
+            // mapView.goTo({
+            //     center: [extent.xmin + (extent.xmax - extent.xmin) / 2, extent.ymin + (extent.ymax - extent.ymin) / 2],
+            //     zoom: 10
+            // })
+            mapView.extent = extent;
             if (curLayer) {
                 curLayer.visible = !curLayer.visible;
                 return
             }
             let ImageOverlayLayer = new customDynamicLayer({
                 id: 'baes_dynamic_layer',
-                picUrl: `./image/yasuo.jpg`,
+                picUrl: `./image/quickview.png`,
                 extent: extent,
                 view: mapView
             });
@@ -91,6 +96,7 @@
                 },
                 getImageUrl: async function (extent, width, height) {
                     //转换图片范围的坐标系，如果坐标系相同，则无需转换
+                    console.log(this.extent);
                     let wgsExtent = WebMercatorUtils.geographicToWebMercator(new GeoExtent({
                         xmin: this.extent.xmin,
                         ymin: this.extent.ymin,
